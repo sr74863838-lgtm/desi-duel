@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Desi Duel - Rahul vs Palak</title>
-  
+
+  <!-- PeerJS for Multiplayer Connectivity -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <script src="https://download.agora.io/sdk/web/AgoraRTC_N-4.20.0.js"></script>
 
   <style>
     :root {
@@ -27,6 +27,7 @@
       width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; position: relative; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
     }
 
+    /* Top Bar */
     .top-bar {
       display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(15, 23, 42, 0.8); border-bottom: 2px solid #334155; z-index: 10;
     }
@@ -39,6 +40,7 @@
     #rahulHp { background: linear-gradient(90deg, #10b981, #34d399); }
     #palakHp { background: linear-gradient(90deg, #ec4899, #f472b6); }
 
+    /* Lobby */
     #lobbyModal {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       background: var(--card-bg); border: 2px solid var(--accent); border-radius: 16px; padding: 20px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); z-index: 100;
@@ -49,20 +51,25 @@
     .btn-connect { background: var(--blue); color: #fff; }
     .btn-solo { background: var(--accent); color: #000; }
 
+    /* Arena */
     #arena { flex: 1; position: relative; width: 100%; overflow: hidden; background: linear-gradient(to bottom, #1e293b 0%, #334155 80%, #0f172a 100%); }
     .ground { position: absolute; bottom: 0; width: 100%; height: 35px; background: #10b981; border-top: 4px solid #059669; }
 
+    /* Fighters & Avatars */
     .fighter { position: absolute; bottom: 35px; width: 70px; height: 90px; display: flex; flex-direction: column; align-items: center; transition: left 0.08s linear; }
     .fighter-tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.6); margin-bottom: 2px; }
     
+    /* Custom Character Avatars */
     .avatar-box { width: 60px; height: 65px; position: relative; display: flex; justify-content: center; align-items: flex-end; }
     .head { width: 36px; height: 36px; border-radius: 50%; background: #fca5a5; position: absolute; top: 0; border: 2px solid #000; display: flex; justify-content: center; align-items: center; }
     .body { width: 28px; height: 30px; border-radius: 6px 6px 0 0; position: absolute; bottom: 0; border: 2px solid #000; }
     
+    /* Rahul Styling */
     #rahul .head { background: #fdba74; }
     #rahul .body { background: #1e40af; }
     #rahul .face { font-size: 14px; }
     
+    /* Palak Styling */
     #palak .head { background: #fbcfe8; }
     #palak .body { background: #db2777; }
     #palak .hair { position: absolute; top: -4px; width: 40px; height: 16px; background: #1e1b4b; border-radius: 10px 10px 0 0; }
@@ -70,6 +77,7 @@
     .hit-anim { animation: shake 0.2s ease; }
     @keyframes shake { 0%{transform: translateX(0);} 25%{transform: translateX(-8px);} 75%{transform: translateX(8px);} 100%{transform: translateX(0);} }
 
+    /* Bottom Control Bar */
     .control-panel { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 6px; padding: 8px; background: #0f172a; border-top: 2px solid #334155; }
     .ctrl-btn { padding: 12px 4px; border-radius: 8px; border: none; font-size: 12px; font-weight: bold; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
     .ctrl-btn:active { transform: scale(0.95); opacity: 0.8; }
@@ -77,18 +85,12 @@
     .btn-punch { background: #ef4444; }
     .btn-chappal { background: #8b5cf6; }
     .btn-kiss { background: #ec4899; }
-
-    #voice-controls { position: fixed; top: 12px; right: 12px; z-index: 99999; }
-    #mic-btn { padding: 6px 14px; background-color: #10b981; color: #ffffff; border: 2px solid #ffffff; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
   </style>
 </head>
 <body>
 
-  <div id="voice-controls">
-    <button id="mic-btn" onclick="toggleMic()">🎙️ Mic ON</button>
-  </div>
-
   <div id="gameContainer">
+    <!-- Top Bar with HP -->
     <div class="top-bar">
       <div class="hp-container">
         <div class="hp-label" style="color:#34d399;">🥊 RAHUL HP</div>
@@ -101,6 +103,7 @@
       </div>
     </div>
 
+    <!-- Connection Lobby -->
     <div id="lobbyModal">
       <h3 style="margin-top:0; color:var(--accent);">DESI DUEL LOBBY</h3>
       <p style="font-size:12px; color:#94a3b8; margin:0;">Share your ID with friend to connect:</p>
@@ -111,7 +114,9 @@
       <div id="status" style="font-size:11px; color:#64748b; margin-top:5px;">Status: Waiting...</div>
     </div>
 
+    <!-- Game Arena -->
     <div id="arena">
+      <!-- Rahul Fighter -->
       <div id="rahul" class="fighter" style="left: 15%;">
         <div class="fighter-tag" style="color:#60a5fa;">RAHUL</div>
         <div class="avatar-box">
@@ -120,6 +125,7 @@
         </div>
       </div>
 
+      <!-- Palak Fighter -->
       <div id="palak" class="fighter" style="left: 70%;">
         <div class="fighter-tag" style="color:#f472b6;">PALAK</div>
         <div class="avatar-box">
@@ -132,6 +138,7 @@
       <div class="ground"></div>
     </div>
 
+    <!-- Controls Panel -->
     <div class="control-panel">
       <button class="ctrl-btn btn-left" onclick="move(-15)">◀ Left</button>
       <button class="ctrl-btn btn-right" onclick="move(15)">Right ▶</button>
@@ -141,6 +148,7 @@
     </div>
   </div>
 
+  <!-- Audio Elements -->
   <audio id="sndChappal" src="chappal.mp3"></audio>
   <audio id="sndKiss" src="kiss.mp3"></audio>
   <audio id="sndRahulHit" src="rahul_hit.mp3"></audio>
@@ -242,41 +250,6 @@
       document.getElementById('rahulHp').style.width = hp.rahul + '%';
       document.getElementById('palakHp').style.width = hp.palak + '%';
     }
-
-    const APP_ID = "7210d406ce5141bfa0b905a003c0e298";
-    const CHANNEL = "desi-duel-room";
-    
-    let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-    let localAudioTrack = null;
-    let isMicOn = false;
-
-    async function toggleMic() {
-      const btn = document.getElementById("mic-btn");
-      try {
-        if (!isMicOn) {
-          await client.join(APP_ID, CHANNEL, null, null);
-          localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-          await client.publish([localAudioTrack]);
-          btn.innerText = "🎙️ Voice Active";
-          btn.style.backgroundColor = "#10b981";
-          isMicOn = true;
-        } else {
-          if (localAudioTrack) localAudioTrack.close();
-          await client.leave();
-          btn.innerText = "🔇 Mic Muted";
-          btn.style.backgroundColor = "#ef4444";
-          isMicOn = false;
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Microphone permission allow karein!");
-      }
-    }
-
-    client.on("user-published", async (user, mediaType) => {
-      await client.subscribe(user, mediaType);
-      if (mediaType === "audio") user.audioTrack.play();
-    });
   </script>
 </body>
 </html>
