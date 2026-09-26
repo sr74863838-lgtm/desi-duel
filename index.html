@@ -58,7 +58,7 @@
 
     /* Floating Voice Control Button */
     #voiceBox { position: absolute; top: 8px; right: 8px; z-index: 99; }
-    #micBtn { padding: 6px 12px; font-size: 11px; font-weight: bold; border: 2px solid #fff; border-radius: 20px; background: #27ae60; color: #fff; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    #micBtn { padding: 6px 12px; font-size: 11px; font-weight: bold; border: 2px solid #fff; border-radius: 20px; background: #e74c3c; color: #fff; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
   </style>
 </head>
 <body>
@@ -66,7 +66,7 @@
   <div id="gameBox">
     <!-- Mic Toggle Button -->
     <div id="voiceBox">
-      <button id="micBtn" onclick="toggleVoice()">🎙️ Mic ON</button>
+      <button id="micBtn" onclick="toggleVoice()">🔇 Mic OFF</button>
     </div>
 
     <h1>🥊 RAHUL VS PALAK 🩴</h1>
@@ -335,14 +335,28 @@
     // --- AGORA VOICE CHAT INTEGRATION ---
     const AGORA_APP_ID = "7210d406ce5141bfa0b905a003c0e298";
     const AGORA_CHANNEL = "desi-duel-room";
-    let agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+    let agoraClient = null;
     let localAudioTrack = null;
     let isMicOn = false;
+
+    async function initAgora() {
+      if (!agoraClient) {
+        agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        agoraClient.on("user-published", async (user, mediaType) => {
+          await agoraClient.subscribe(user, mediaType);
+          if (mediaType === "audio") {
+            user.audioTrack.play();
+          }
+        });
+      }
+    }
 
     async function toggleVoice() {
       const btn = document.getElementById("micBtn");
       try {
+        await initAgora();
         if (!isMicOn) {
+          btn.innerText = "⏳ Connecting...";
           await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, null, null);
           localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
           await agoraClient.publish([localAudioTrack]);
@@ -351,25 +365,23 @@
           isMicOn = true;
         } else {
           if (localAudioTrack) {
+            localAudioTrack.stop();
             localAudioTrack.close();
+            localAudioTrack = null;
           }
           await agoraClient.leave();
-          btn.innerText = "🔇 Mic Muted";
+          btn.innerText = "🔇 Mic OFF";
           btn.style.background = "#e74c3c";
           isMicOn = false;
         }
       } catch (err) {
         console.error("Agora Voice Error:", err);
-        alert("Microphone Access Allow Karein!");
+        alert("Microphone permission allow karein aur refresh karein!");
+        btn.innerText = "🔇 Mic OFF";
+        btn.style.background = "#e74c3c";
+        isMicOn = false;
       }
     }
-
-    agoraClient.on("user-published", async (user, mediaType) => {
-      await agoraClient.subscribe(user, mediaType);
-      if (mediaType === "audio") {
-        user.audioTrack.play();
-      }
-    });
   </script>
 </body>
 </html>
