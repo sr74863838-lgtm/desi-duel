@@ -4,318 +4,246 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Desi Duel - Rahul vs Palak</title>
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <style>
-    :root { --bg: #0f111a; --card: #1a1d2e; --accent: #f1c40f; --red: #e74c3c; }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; color: #fff; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; }
-    #gameBox { width: 100vw; height: 100vh; background: radial-gradient(circle at center, #1e2440 0%, var(--bg) 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 8px; }
-    h1 { margin: 0; font-size: clamp(16px, 3vw, 24px); color: var(--accent); text-align: center; }
-    #lobby { background: var(--card); border: 2px solid var(--accent); border-radius: 12px; padding: 15px; max-width: 450px; margin: auto; text-align: center; }
-    .input-box { width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #444; background: #0f111a; color: #fff; text-align: center; }
-    .btn-primary { width: 100%; padding: 10px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; background: #4b6584; color: white; margin-bottom: 6px; }
-    .btn-solo { background: #e67e22; margin-top: 10px; }
-    #arena { display: none; position: relative; width: 100%; flex: 1; background: linear-gradient(#4b79a1, #283e51); border: 3px solid var(--accent); border-radius: 12px; overflow: hidden; margin-top: 5px; }
-    #hud { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-    .hp-wrap { width: 40%; }
-    .hp-wrap.right { text-align: right; }
-    .hp-title { font-size: 12px; font-weight: bold; margin-bottom: 2px; }
-    .hp-bar { height: 16px; background: #222; border-radius: 8px; border: 2px solid #fff; overflow: hidden; }
-    .hp-fill { height: 100%; width: 100%; transition: width 0.15s; }
-    #hpRahul { background: linear-gradient(90deg, #00b894, #55efc4); }
-    #hpPalak { background: linear-gradient(90deg, #e84393, #fd79a8); }
-    #dialogue { position: absolute; top: 45px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); border: 2px solid var(--accent); color: var(--accent); padding: 5px 14px; border-radius: 15px; font-size: 14px; font-weight: bold; z-index: 20; display: none; }
-    #ground { position: absolute; bottom: 0; width: 100%; height: 35px; background: #27ae60; border-top: 3px solid #1e824c; }
-    .fighter { position: absolute; width: 60px; height: 90px; bottom: 35px; z-index: 5; transition: left 0.08s linear; }
-    .char-name { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; border: 1px solid var(--accent); white-space: nowrap; }
-    #rahul .char-name { color: #54a0ff; }
-    #palak .char-name { color: #ff9ff3; }
-    .fighter[data-face="left"] svg { transform: scaleX(-1); }
-    .hit { animation: hitFlash 0.25s linear; filter: brightness(2) contrast(1.5); }
-    @keyframes hitFlash { 0%,100%{transform:rotate(0);} 25%{transform:rotate(-12deg);} 75%{transform:rotate(12deg);} }
-    
-    .chappal-fly { position: absolute; z-index: 8; bottom: 65px; font-size: 28px; transition: left 0.35s linear; animation: spin 0.2s linear infinite; }
-    @keyframes spin { from{transform:rotate(0);} to{transform:rotate(360deg);} }
-    
-    .kiss-fly { position: absolute; z-index: 8; bottom: 70px; font-size: 30px; transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); animation: pulse 0.3s infinite alternate; }
-    @keyframes pulse { from{transform:scale(0.8);} to{transform:scale(1.2);} }
 
-    #bottomArea { display: none; margin-top: 5px; }
-    .panel-box { background: var(--card); border-radius: 10px; padding: 6px; border: 1px solid #2d334d; display: flex; justify-content: space-around; align-items: center; gap: 4px; }
-    .btn-act { padding: 12px 10px; font-size: 12px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: white; flex: 1; box-shadow: 0 3px #000; text-align: center; }
-    .btn-act:active { transform: translateY(2px); box-shadow: none; }
-    .btn-move { background: #3867d6; }
-    .btn-punch { background: var(--red); }
-    .btn-chappal { background: #8e44ad; }
-    .btn-kiss { background: #e84393; }
-    #roleTag { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #2d3436; padding: 4px 10px; border-radius: 10px; font-size: 12px; color: var(--accent); font-weight: bold; }
+  <!-- PeerJS for Multiplayer Game Connectivity -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <!-- Agora Web Voice Chat SDK -->
+  <script src="https://download.agora.io/sdk/web/AgoraRTC_N-4.20.0.js"></script>
+
+  <style>
+    :root { --bg: #0f111a; --card: #1a1d2e; --accent: #f1c40f; --red: #e74c3c; --green: #2ecc71; }
+    * { box-sizing: border-box; webkit-tap-highlight-color: transparent; user-select: none; }
+    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: var(--bg); font-family: system-ui, sans-serif; color: #fff; }
+    #gameBox { width: 100vw; height: 100vh; background: radial-gradient(circle at center, #1e2238 0%, var(--bg) 100%); display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+    h1 { margin: 0; font-size: clamp(16px, 3vw, 24px); color: var(--accent); text-align: center; margin-top: 5px; }
+    #lobby { background: var(--card); border: 2px solid var(--accent); border-radius: 12px; padding: 15px; width: 90%; max-width: 400px; margin: auto; text-align: center; }
+    .input-box { width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #333; background: #0b0d14; color: #fff; text-align: center; font-size: 14px; }
+    .btn { width: 100%; padding: 10px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; }
+    .btn-primary { background: #3498db; color: #fff; }
+    .btn-solo { background: #a67c17; margin-top: 10px; }
+    #arena { display: none; position: relative; width: 100%; flex: 1; background: linear-gradient(#4b79a1, #283e51); overflow: hidden; }
+    .fighter { position: absolute; bottom: 60px; width: 100px; height: 120px; text-align: center; transition: left 0.1s linear, transform 0.1s ease; }
+    .fighter img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover; }
+    .hp-bar { width: 100%; height: 10px; background: #555; border-radius: 5px; overflow: hidden; margin-top: 5px; }
+    .hp-fill { height: 100%; width: 100%; background: var(--green); transition: width 0.2s ease; }
+    #ground { position: absolute; bottom: 0; width: 100%; height: 60px; background: #111; border-top: 4px solid var(--accent); }
+    .controls { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; padding: 10px; background: #000000aa; }
+    .ctrl-btn { padding: 15px; font-size: 18px; font-weight: bold; border-radius: 8px; border: none; background: #333; color: #fff; active: background: #555; }
+    .btn-hit { background: var(--red); }
+    .hit { animation: shake 0.2s ease; }
+    @keyframes shake { 0%{transform: translateX(0);} 25%{transform: translateX(-10px);} 75%{transform: translateX(10px);} 100%{transform: translateX(0);} }
+
+    /* Floating Mic Button Styling */
+    #voice-controls {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 99999;
+    }
+    #mic-btn {
+      padding: 8px 16px;
+      background-color: #22c55e;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
   </style>
 </head>
 <body>
 
-  <div id="gameBox">
-    <h1>🥊 RAHUL VS PALAK 🩴</h1>
+  <!-- Floating Mic Button -->
+  <div id="voice-controls">
+    <button id="mic-btn" onclick="toggleMic()">🎙️ Mic ON</button>
+  </div>
 
+  <div id="gameBox">
+    <h1>DESI DUEL: RAHUL VS PALAK</h1>
+
+    <!-- Lobby -->
     <div id="lobby">
-      <p id="statusMsg" style="margin-bottom:10px; font-size:14px;">Select Game Mode:</p>
-      
-      <button class="btn-primary btn-solo" onclick="startPracticeMode()">⚡ Practice Mode (Rahul vs Bot)</button>
-      
-      <div style="margin: 15px 0; border-top: 1px solid #444; padding-top: 10px;">
-        <p style="font-size:12px; color:#aaa;">Multiplayer (2 Different Laptops/Tabs):</p>
-        <button class="btn-primary" onclick="createRoom()">🏠 Create Room (Play as Rahul)</button>
-        <input type="text" id="joinIdInput" class="input-box" placeholder="Enter Room Code" style="margin-top:8px;"/>
-        <button class="btn-primary" style="background:#00b894;" onclick="joinRoom()">🔗 Join Room (Play as Palak)</button>
-      </div>
-      
-      <p id="myCodeText" style="font-size: 13px; color: var(--accent); font-weight: bold; margin: 0;"></p>
+      <p style="margin-top:0;">Your ID: <b id="myId" style="color:var(--accent);">Generating...</b></p>
+      <input type="text" id="peerIdInput" class="input-box" placeholder="Enter Friend's ID" />
+      <button class="btn btn-primary" onclick="connectToPeer()">Connect Friend</button>
+      <button class="btn btn-solo" onclick="startSoloMode()">Play Solo vs Bot</button>
+      <p id="status" style="font-size:12px; color:#aaa; margin-bottom:0; margin-top:8px;">Waiting for connection...</p>
     </div>
 
+    <!-- Arena -->
     <div id="arena">
-      <div id="roleTag">Role: Loading...</div>
-      <div id="hud">
-        <div class="hp-wrap">
-          <div class="hp-title" style="color:#54a0ff;">👦 RAHUL HP</div>
-          <div class="hp-bar"><div class="hp-fill" id="hpRahul"></div></div>
-        </div>
-        <div style="font-size:16px; font-weight:bold; color:var(--accent);">VS</div>
-        <div class="hp-wrap right">
-          <div class="hp-title" style="color:#ff9ff3;">👧 PALAK HP</div>
-          <div class="hp-bar"><div class="hp-fill" id="hpPalak"></div></div>
-        </div>
+      <div id="rahul" class="fighter" style="left: 10%;">
+        <div class="hp-bar"><div id="hpRahul" class="hp-fill"></div></div>
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Rahul" alt="Rahul" />
+        <div style="font-weight:bold; font-size:12px;">RAHUL 🥊</div>
       </div>
 
-      <div id="dialogue">💬 Fight!</div>
-
-      <div id="rahul" class="fighter" data-face="right" style="left:50px;">
-        <div class="char-name">👦 RAHUL</div>
-        <svg viewBox="0 0 70 100">
-          <path d="M 18 20 Q 35 0 52 20 Z" fill="#e74c3c" />
-          <circle cx="35" cy="28" r="16" fill="#ffeaa7" />
-          <rect x="23" y="24" width="24" height="6" rx="2" fill="#000" />
-          <path d="M 30 36 Q 35 42 40 36" stroke="#000" stroke-width="2" fill="none" />
-          <rect x="20" y="44" width="30" height="32" rx="5" fill="#0984e3" />
-          <rect x="24" y="76" width="9" height="22" fill="#2d3436" />
-          <rect x="37" y="76" width="9" height="22" fill="#2d3436" />
-        </svg>
+      <div id="palak" class="fighter" style="left: 70%;">
+        <div class="hp-bar"><div id="hpPalak" class="hp-fill"></div></div>
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Palak" alt="Palak" />
+        <div style="font-weight:bold; font-size:12px;">PALAK 👡</div>
       </div>
-
-      <div id="palak" class="fighter" data-face="left" style="left:80%;">
-        <div class="char-name">👧 PALAK</div>
-        <svg viewBox="0 0 70 100">
-          <path d="M 12 25 Q 35 0 58 25 L 60 65 Q 35 60 10 65 Z" fill="#2d3436" />
-          <circle cx="14" cy="30" r="7" fill="#ff4757" />
-          <circle cx="35" cy="28" r="15" fill="#ffeaa7" />
-          <circle cx="29" cy="26" r="2" fill="#000" /><circle cx="41" cy="26" r="2" fill="#000" />
-          <path d="M 30 35 Q 35 40 40 35" stroke="#e84393" stroke-width="2" fill="none" />
-          <path d="M 24 43 L 46 43 L 53 76 L 17 76 Z" fill="#fd79a8" />
-          <rect x="26" y="76" width="7" height="20" fill="#ffeaa7" />
-          <rect x="37" y="76" width="7" height="20" fill="#ffeaa7" />
-        </svg>
-      </div>
-
       <div id="ground"></div>
     </div>
 
-    <div id="bottomArea">
-      <div class="panel-box">
-        <button class="btn-act btn-move" onclick="sendAction('left')">◀ Left</button>
-        <button class="btn-act btn-move" onclick="sendAction('right')">Right ▶</button>
-        <button class="btn-act btn-punch" onclick="sendAction('punch')">👊 Punch</button>
-        <button class="btn-act btn-chappal" onclick="sendAction('chappal')">🩴 Chappal</button>
-        <button class="btn-act btn-kiss" onclick="sendAction('kiss')">💋 Kiss</button>
-      </div>
+    <!-- Controls -->
+    <div class="controls" id="controlsBox" style="display:none;">
+      <button class="ctrl-btn" onclick="move(-20)">⬅️ Left</button>
+      <button class="ctrl-btn" onclick="move(20)">Right ➡️</button>
+      <button class="ctrl-btn btn-hit" onclick="attack()">ATTACK 💥</button>
     </div>
   </div>
 
+  <!-- Audio Effects -->
+  <audio id="sndChappal" src="chappal.mp3"></audio>
+  <audio id="sndKiss" src="kiss.mp3"></audio>
+  <audio id="sndRahulHit" src="rahul_hit.mp3"></audio>
+  <audio id="sndPalakHit" src="palak_hit.mp3"></audio>
+
   <script>
-    let peer = null, conn = null, myRole = 'rahul', isPractice = false;
-    let pos = { rahul: 50, palak: 500 }, hp = { rahul: 100, palak: 100 };
-
-    // Audio Files Loader
-    const sounds = {
-      chappal: new Audio('./chappal.mp3'),
-      kiss: new Audio('./kiss.mp3'),
-      rahul: new Audio('./rahul_hit.mp3'),
-      palak: new Audio('./palak_hit.mp3')
-    };
-
-    function playAudio(soundName) {
-      if (sounds[soundName]) {
-        sounds[soundName].currentTime = 0;
-        sounds[soundName].play().catch(err => console.log("Audio Error:", err));
-      }
+    // Audio Player Helper
+    function playAudio(elemId) {
+      const a = document.getElementById(elemId);
+      if(a) { a.currentTime = 0; a.play().catch(()=>{}); }
     }
 
-    function startPracticeMode() {
-      isPractice = true;
-      myRole = 'rahul';
-      startBattle();
-    }
+    // PeerJS Game Setup
+    let peer, conn;
+    let myRole = 'rahul'; 
+    let isSolo = false;
+    let pos = { rahul: 10, palak: 70 };
+    let hp = { rahul: 100, palak: 100 };
 
-    function createRoom() {
-      myRole = 'rahul';
-      const roomId = 'DESI-' + Math.floor(1000 + Math.random() * 9000);
-      peer = new Peer(roomId);
-      document.getElementById('statusMsg').textContent = 'Creating Room...';
-      
-      peer.on('open', (id) => {
-        document.getElementById('statusMsg').textContent = 'Share Code with Palak:';
-        document.getElementById('myCodeText').textContent = 'ROOM CODE: ' + id;
-      });
+    peer = new Peer();
+    peer.on('open', id => { document.getElementById('myId').innerText = id; });
 
-      peer.on('connection', (c) => {
-        conn = c;
-        setupConnection();
-        startBattle();
-      });
-    }
-
-    function joinRoom() {
+    peer.on('connection', c => {
+      conn = c;
       myRole = 'palak';
-      const roomId = document.getElementById('joinIdInput').value.trim();
-      if (!roomId) return alert("Enter Room Code!");
-      
-      peer = new Peer();
-      peer.on('open', () => {
-        conn = peer.connect(roomId);
-        setupConnection();
-        startBattle();
-      });
+      setupConn();
+      startGame();
+    });
+
+    function connectToPeer() {
+      const destId = document.getElementById('peerIdInput').value.trim();
+      if(!destId) return alert('Enter a valid ID!');
+      conn = peer.connect(destId);
+      myRole = 'rahul';
+      setupConn();
+      startGame();
     }
 
-    function setupConnection() {
-      conn.on('data', (data) => {
-        executeAction(data.role, data.action, false);
-      });
-    }
-
-    function startBattle() {
-      document.getElementById("lobby").style.display = "none";
-      document.getElementById("arena").style.display = "block";
-      document.getElementById("bottomArea").style.display = "block";
-      document.getElementById("roleTag").textContent = "You are: " + myRole.toUpperCase();
-
-      const arenaWidth = document.getElementById("arena").offsetWidth;
-      pos.rahul = 50;
-      pos.palak = arenaWidth - 110;
-
-      document.getElementById("rahul").style.left = pos.rahul + "px";
-      document.getElementById("palak").style.left = pos.palak + "px";
-    }
-
-    function sendAction(action) {
-      executeAction(myRole, action, true);
-      
-      if (!isPractice && conn) {
-        conn.send({ role: myRole, action: action });
-      }
-
-      if (isPractice) {
-        setTimeout(() => {
-          const botActions = ['left', 'right', 'punch', 'chappal', 'kiss'];
-          const randomAct = botActions[Math.floor(Math.random() * botActions.length)];
-          executeAction('palak', randomAct, false);
-        }, 800);
-      }
-    }
-
-    function executeAction(role, action, isLocal) {
-      if (hp.rahul <= 0 || hp.palak <= 0) return;
-
-      const opp = role === 'rahul' ? 'palak' : 'rahul';
-      const el = document.getElementById(role);
-      const arenaWidth = document.getElementById("arena").offsetWidth;
-
-      if (action === 'left') {
-        pos[role] = Math.max(10, pos[role] - 35);
-        el.style.left = pos[role] + "px";
-        el.dataset.face = 'left';
-      }
-      if (action === 'right') {
-        pos[role] = Math.min(arenaWidth - 70, pos[role] + 35);
-        el.style.left = pos[role] + "px";
-        el.dataset.face = 'right';
-      }
-      if (action === 'punch') {
-        showBubble(role, "Dhishum! 👊");
-        playAudio('chappal');
-        if (Math.abs(pos.rahul - pos.palak) < 85) {
-          applyHit(opp, 15);
+    function setupConn() {
+      document.getElementById('status').innerText = "Connected!";
+      conn.on('data', data => {
+        if(data.type === 'state') {
+          pos = data.pos;
+          hp = data.hp;
+          updateUI();
+        } else if(data.type === 'hit') {
+          playAudio(data.victim === 'rahul' ? 'sndRahulHit' : 'sndPalakHit');
         }
-      }
-      if (action === 'chappal') {
-        showBubble(role, "Flying Chappal! 🩴");
-        flyChappal(role, opp);
-      }
-      if (action === 'kiss') {
-        showBubble(role, "Flying Kiss! 💋");
-        flyKiss(role, opp);
-      }
+      });
     }
 
-    function showBubble(role, text) {
-      const b = document.getElementById("dialogue");
-      b.textContent = (role === 'rahul' ? '👦 Rahul: ' : '👧 Palak: ') + text;
-      b.style.display = "block";
-      setTimeout(() => b.style.display = "none", 1200);
+    function startSoloMode() {
+      isSolo = true;
+      startGame();
     }
 
-    function flyChappal(shooter, target) {
-      playAudio('chappal');
-      const arena = document.getElementById("arena");
-      const c = document.createElement("div");
-      c.className = "chappal-fly";
-      c.textContent = "🩴";
-      c.style.left = (pos[shooter] + 20) + "px";
-      arena.appendChild(c);
-      
-      setTimeout(() => { c.style.left = (pos[target] + 10) + "px"; }, 30);
-      
-      setTimeout(() => {
-        c.remove();
-        applyHit(target, 20);
-      }, 350);
+    function startGame() {
+      document.getElementById('lobby').style.display = 'none';
+      document.getElementById('arena').style.display = 'block';
+      document.getElementById('controlsBox').style.display = 'grid';
+      updateUI();
     }
 
-    function flyKiss(shooter, target) {
-      const arena = document.getElementById("arena");
-      const k = document.createElement("div");
-      k.className = "kiss-fly";
-      k.textContent = "💋";
-      k.style.left = (pos[shooter] + 20) + "px";
-      arena.appendChild(k);
+    function move(dir) {
+      pos[myRole] = Math.max(0, Math.min(80, pos[myRole] + dir));
+      sync();
+    }
 
-      setTimeout(() => { k.style.left = (pos[target] + 15) + "px"; }, 30);
-
-      setTimeout(() => {
-        playAudio('kiss');
-        k.remove();
-      }, 380);
+    function attack() {
+      const opponent = myRole === 'rahul' ? 'palak' : 'rahul';
+      if(Math.abs(pos.rahul - pos.palak) < 20) {
+        applyHit(opponent, 15);
+        if(conn) conn.send({ type: 'hit', victim: opponent });
+        playAudio(myRole === 'rahul' ? 'sndKiss' : 'sndChappal');
+      }
+      sync();
     }
 
     function applyHit(victim, dmg) {
-      playAudio(victim);
+      playAudio(victim === 'rahul' ? 'sndRahulHit' : 'sndPalakHit');
       hp[victim] = Math.max(0, hp[victim] - dmg);
-      document.getElementById(victim === 'rahul' ? 'hpRahul' : 'hpPalak').style.width = hp[victim] + "%";
-      
+      document.getElementById(victim === 'rahul' ? 'hpRahul' : 'hpPalak').style.width = hp[victim] + '%';
       const el = document.getElementById(victim);
-      el.classList.add("hit");
-      const arena = document.getElementById("arena");
-      arena.style.background = "#c0392b";
-      
+      el.classList.add('hit');
+      const arena = document.getElementById('arena');
+      arena.style.background = '#c0392b';
       setTimeout(() => {
-        arena.style.background = "linear-gradient(#4b79a1, #283e51)";
-        el.classList.remove("hit");
+        arena.style.background = 'linear-gradient(#4b79a1, #283e51)';
+        el.classList.remove('hit');
       }, 200);
 
-      if (hp[victim] <= 0) {
+      if(hp[victim] <= 0) {
         setTimeout(() => {
-          alert(`🏆 ${victim === 'rahul' ? 'PALAK 👧' : 'RAHUL 👦'} WINS!`);
+          alert(`${victim === 'rahul' ? 'PALAK 👡' : 'RAHUL 🥊'} WINS!`);
           location.reload();
         }, 300);
       }
     }
+
+    function sync() {
+      updateUI();
+      if(conn) conn.send({ type: 'state', pos, hp });
+    }
+
+    function updateUI() {
+      document.getElementById('rahul').style.left = pos.rahul + '%';
+      document.getElementById('palak').style.left = pos.palak + '%';
+      document.getElementById('hpRahul').style.width = hp.rahul + '%';
+      document.getElementById('hpPalak').style.width = hp.palak + '%';
+    }
+
+    // AGORA LIVE VOICE CHAT CODE
+    const APP_ID = "7210d406ce5141bfa0b905a003c0e298";
+    const CHANNEL = "desi-duel-room";
+    
+    let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+    let localAudioTrack = null;
+    let isMicOn = false;
+
+    async function toggleMic() {
+      const btn = document.getElementById("mic-btn");
+      try {
+        if (!isMicOn) {
+          await client.join(APP_ID, CHANNEL, null, null);
+          localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+          await client.publish([localAudioTrack]);
+          btn.innerText = "🎙️ Voice Active";
+          btn.style.backgroundColor = "#22c55e";
+          isMicOn = true;
+        } else {
+          if (localAudioTrack) localAudioTrack.close();
+          await client.leave();
+          btn.innerText = "🔇 Mic Muted";
+          btn.style.backgroundColor = "#ef4444";
+          isMicOn = false;
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Microphone permission allow karein!");
+      }
+    }
+
+    client.on("user-published", async (user, mediaType) => {
+      await client.subscribe(user, mediaType);
+      if (mediaType === "audio") user.audioTrack.play();
+    });
   </script>
 </body>
 </html>
